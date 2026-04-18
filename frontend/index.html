@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClínicaVet — Sistema de Gestión</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d1117; --surface:#161b22; --surface2:#1f2937; --border:#30363d;
+  --green:#3fb950; --green-dim:#1a4a24; --green-glow:rgba(63,185,80,0.15);
+  --amber:#d29922; --red:#f85149; --text:#e6edf3; --text-muted:#7d8590;
+  --mono:'Space Mono',monospace; --sans:'DM Sans',sans-serif;
+  --radius:6px; --shadow:0 8px 32px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-brand{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green);letter-spacing:2px;text-transform:uppercase}
+.topbar-brand span{color:var(--text-muted);font-weight:400}
+.session-badge{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px}
+.role-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.role-pill.admin{background:#1c2a4a;color:#79c0ff;border:1px solid #388bfd}
+.role-pill.veterinario{background:var(--green-dim);color:var(--green);border:1px solid var(--green)}
+.role-pill.recepcion{background:#3d2b00;color:var(--amber);border:1px solid var(--amber)}
+.btn-logout{background:none;border:1px solid var(--border);color:var(--text-muted);padding:4px 12px;border-radius:var(--radius);cursor:pointer;font-size:12px;font-family:var(--mono);transition:all .2s}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+.nav-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px}
+.nav-tab{padding:12px 20px;font-size:13px;font-family:var(--mono);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase;letter-spacing:1px}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--green);border-bottom-color:var(--green)}
+main{flex:1;padding:32px 24px;max-width:1100px;width:100%;margin:0 auto}
+.page{display:none}
+.page.active{display:block}
+.login-wrapper{min-height:calc(100vh - 57px);display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 0%,rgba(63,185,80,0.08) 0%,transparent 70%)}
+.login-card{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:40px;box-shadow:var(--shadow)}
+.login-logo{text-align:center;margin-bottom:32px}
+.login-logo h1{font-family:var(--mono);font-size:22px;color:var(--green);letter-spacing:4px}
+.login-logo p{color:var(--text-muted);font-size:13px;margin-top:6px}
+.form-group{margin-bottom:18px}
+label{display:block;font-size:11px;font-family:var(--mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+select,input[type=text],input[type=password]{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:10px 14px;font-size:14px;font-family:var(--sans);transition:border-color .2s;outline:none}
+select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow)}
+select option{background:var(--surface2)}
+.btn-primary{width:100%;background:var(--green);color:#0d1117;border:none;border-radius:var(--radius);padding:12px;font-size:14px;font-family:var(--mono);font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-primary:hover{background:#52d066;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.alert{padding:10px 14px;border-radius:var(--radius);font-size:13px;margin-bottom:16px;display:none}
+.alert.error{background:rgba(248,81,73,.15);border:1px solid var(--red);color:var(--red)}
+.alert.success{background:var(--green-dim);border:1px solid var(--green);color:var(--green)}
+.alert.visible{display:block}
+.search-header{margin-bottom:28px}
+.search-header h2{font-family:var(--mono);font-size:18px;letter-spacing:2px}
+.search-header p{color:var(--text-muted);font-size:13px;margin-top:4px}
+.search-bar{display:flex;gap:10px;margin-bottom:24px}
+.search-bar input{flex:1;font-family:var(--mono)}
+.btn-search{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:var(--radius);font-family:var(--mono);font-size:13px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-search:hover{border-color:var(--green);color:var(--green)}
+.table-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--surface2);border-bottom:1px solid var(--border)}
+th{text-align:left;padding:12px 16px;font-family:var(--mono);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:400}
+td{padding:12px 16px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-family:var(--mono);font-weight:700}
+.tag.perro{background:#1c3a5a;color:#79c0ff}
+.tag.gato{background:#3d2b6b;color:#d2a8ff}
+.tag.conejo{background:#3d2b00;color:var(--amber)}
+.cache-status-bar{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:20px;font-family:var(--mono);font-size:12px}
+.cache-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cache-dot.hit{background:var(--green);box-shadow:0 0 6px var(--green)}
+.cache-dot.miss{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.cache-dot.idle{background:var(--text-muted)}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px}
+.stat-label{font-family:var(--mono);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.stat-value{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--green)}
+.spinner{display:none;text-align:center;padding:40px;color:var(--text-muted);font-family:var(--mono);font-size:13px}
+.spinner.visible{display:block}
+.spinner::before{content:'';display:block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.attack-info{background:rgba(248,81,73,.08);border:1px solid rgba(248,81,73,.3);border-radius:var(--radius);padding:12px 16px;margin-bottom:20px;font-size:12px;font-family:var(--mono);color:var(--text-muted)}
+.attack-info strong{color:var(--red)}
+.creds-box{margin-bottom:16px;font-size:11px;font-family:var(--mono);color:var(--text-muted);background:var(--surface2);padding:10px;border-radius:var(--radius);border:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<header class="topbar" id="topbar" style="display:none">
+  <div class="topbar-brand">CLINICA<span>VET</span></div>
+  <div class="session-badge">
+    <span id="topbar-nombre" style="color:var(--text-muted)"></span>
+    <span class="role-pill" id="topbar-role-pill">-</span>
+    <button class="btn-logout" onclick="logout()">SALIR</button>
+  </div>
+</header>
+
+<nav class="nav-tabs" id="nav-tabs" style="display:none">
+  <div class="nav-tab active" onclick="showPage('busqueda')">MASCOTAS</div>
+  <div class="nav-tab" onclick="showPage('vacunacion')">VACUNACION</div>
+</nav>
+
+<!-- LOGIN -->
+<div class="page active" id="page-login">
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="login-logo">
+        <h1>CLINICA VET</h1>
+        <p>Sistema de Gestion · UP Chiapas · BDA Corte 3</p>
+      </div>
+      <div class="alert error" id="login-error"></div>
+      <div class="form-group">
+        <label>Usuario</label>
+        <select id="login-usuario">
+          <option value="">- Selecciona usuario -</option>
+          <option value="vet_lopez">Dr. Fernando Lopez (Veterinario - vet_id=1)</option>
+          <option value="vet_garcia">Dra. Sofia Garcia (Veterinaria - vet_id=2)</option>
+          <option value="vet_mendez">Dr. Andres Mendez (Veterinario - vet_id=3)</option>
+          <option value="usuario_recepcion">Recepcion</option>
+          <option value="usuario_admin">Administrador</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Contrasena</label>
+        <input type="password" id="login-password" placeholder="Contrasena" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="creds-box">
+        CREDENCIALES DE PRUEBA:<br>
+        vet_lopez / vet_lopez_pass<br>
+        vet_garcia / vet_garcia_pass<br>
+        vet_mendez / vet_mendez_pass<br>
+        usuario_recepcion / recepcion_pass<br>
+        usuario_admin / admin_pass
+      </div>
+      <button class="btn-primary" onclick="doLogin()" id="btn-login">INGRESAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUSQUEDA -->
+<div class="page" id="page-busqueda">
+  <main>
+    <div class="search-header">
+      <h2>BUSQUEDA DE MASCOTAS</h2>
+      <p>Superficie de prueba para SQL Injection. El backend usa queries parametrizadas.</p>
+    </div>
+    <div class="attack-info">
+      <strong>SUPERFICIE DE ATAQUE:</strong> prueba inputs como
+      <code>' OR '1'='1</code> o <code>'; DROP TABLE mascotas; --</code>
+      El backend los trata como texto literal, no como SQL.
+    </div>
+    <div class="search-bar">
+      <input type="text" id="busqueda-input" placeholder="Nombre de mascota (ej: Firulais)" onkeydown="if(event.key==='Enter')buscarMascotas()">
+      <button class="btn-search" onclick="buscarMascotas()">BUSCAR</button>
+      <button class="btn-search" onclick="buscarTodas()">VER TODAS</button>
+    </div>
+    <div class="spinner" id="busqueda-spinner">Consultando base de datos...</div>
+    <div class="alert error" id="busqueda-error"></div>
+    <div class="table-wrapper" id="mascotas-table-wrapper" style="display:none">
+      <table>
+        <thead><tr><th>#</th><th>Nombre</th><th>Especie</th><th>Nacimiento</th><th>Dueno</th><th>Telefono</th></tr></thead>
+        <tbody id="mascotas-tbody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;font-size:11px;font-family:var(--mono);color:var(--text-muted)" id="busqueda-meta"></div>
+  </main>
+</div>
+
+<!-- VACUNACION -->
+<div class="page" id="page-vacunacion">
+  <main>
+    <div class="search-header">
+      <h2>VACUNACION PENDIENTE</h2>
+      <p>Consulta cacheada en Redis. Primera vez va a BD (~100-300ms), siguiente viene de cache (~5-20ms).</p>
+    </div>
+    <div class="cache-status-bar">
+      <div class="cache-dot idle" id="cache-dot"></div>
+      <span id="cache-status-text" style="color:var(--text-muted)">Sin consultar</span>
+      <span style="margin-left:auto;color:var(--text-muted)" id="cache-latency"></span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Total pendientes</div><div class="stat-value" id="stat-total">-</div></div>
+      <div class="stat-card"><div class="stat-label">Mascotas afectadas</div><div class="stat-value" id="stat-mascotas">-</div></div>
+      <div class="stat-card"><div class="stat-label">Ultima consulta</div><div class="stat-value" style="font-size:14px;padding-top:6px" id="stat-hora">-</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px">
+      <button class="btn-search" onclick="cargarVacunacion()">ACTUALIZAR (probar cache)</button>
+      <button class="btn-search" onclick="invalidarCache()" style="border-color:var(--red);color:var(--red)">INVALIDAR CACHE</button>
+    </div>
+    <div class="spinner" id="vacunacion-spinner">Consultando base de datos...</div>
+    <div class="alert error" id="vacunacion-error"></div>
+    <div class="alert success" id="vacunacion-ok"></div>
+    <div class="table-wrapper" id="vacunacion-table-wrapper" style="display:none">
+      <table>
+        <thead><tr><th>Mascota</th><th>Especie</th><th>Dueno</th><th>Vacuna</th><th>Ultima Aplicacion</th><th>Vence</th></tr></thead>
+        <tbody id="vacunacion-tbody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+const API = 'http://localhost:3001/api';
+let session = null;
+
+async function doLogin() {
+  const usuario = document.getElementById('login-usuario').value;
+  const password = document.getElementById('login-password').value;
+  if (!usuario) { showAlert('login-error','Selecciona un usuario.'); return; }
+  hideAlert('login-error');
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.textContent = 'INGRESANDO...';
+  try {
+    const res = await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario,password})});
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    session = data;
+    afterLogin();
+  } catch(err) {
+    showAlert('login-error', err.message || 'Error de conexion con la API.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'INGRESAR';
+  }
+}
+
+function afterLogin() {
+  document.getElementById('topbar').style.display = 'flex';
+  document.getElementById('nav-tabs').style.display = 'flex';
+  document.getElementById('topbar-nombre').textContent = session.nombre;
+  const pill = document.getElementById('topbar-role-pill');
+  pill.textContent = session.role.toUpperCase();
+  pill.className = 'role-pill '+session.role;
+  showPage('busqueda');
+  buscarTodas();
+}
+
+function logout() {
+  session = null;
+  document.getElementById('topbar').style.display = 'none';
+  document.getElementById('nav-tabs').style.display = 'none';
+  document.getElementById('login-usuario').value = '';
+  document.getElementById('login-password').value = '';
+  showPage('login');
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+(name==='login'?'login':name)).classList.add('active');
+  if (name==='busqueda') document.querySelectorAll('.nav-tab')[0].classList.add('active');
+  if (name==='vacunacion') { document.querySelectorAll('.nav-tab')[1].classList.add('active'); cargarVacunacion(); }
+}
+
+function sessionHeaders() {
+  const h = {'Content-Type':'application/json','X-User-Role':session.role};
+  if (session.vetId) h['X-Vet-Id'] = String(session.vetId);
+  return h;
+}
+
+async function buscarMascotas() { await fetchMascotas(document.getElementById('busqueda-input').value.trim()); }
+async function buscarTodas() { document.getElementById('busqueda-input').value=''; await fetchMascotas(''); }
+
+async function fetchMascotas(nombre) {
+  setSpinner('busqueda-spinner',true);
+  hideAlert('busqueda-error');
+  document.getElementById('mascotas-table-wrapper').style.display='none';
+  try {
+    const url = nombre ? API+'/mascotas?nombre='+encodeURIComponent(nombre) : API+'/mascotas';
+    const res = await fetch(url,{headers:sessionHeaders()});
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    renderMascotas(data.data);
+    document.getElementById('busqueda-meta').textContent = data.count+' resultado(s) · rol: '+session.role+(session.vetId?' · vet_id='+session.vetId:'');
+  } catch(err) {
+    showAlert('busqueda-error',err.message);
+  } finally {
+    setSpinner('busqueda-spinner',false);
+  }
+}
+
+function renderMascotas(rows) {
+  const tbody = document.getElementById('mascotas-tbody');
+  tbody.innerHTML = '';
+  if (!rows.length) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">Sin resultados</td></tr>'; }
+  document.getElementById('mascotas-table-wrapper').style.display='block';
+  rows.forEach(m => {
+    const nac = m.fecha_nacimiento ? new Date(m.fecha_nacimiento).toLocaleDateString('es-MX') : '-';
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td style="font-family:var(--mono);color:var(--text-muted)">'+esc(m.id)+'</td>'
+      +'<td style="font-weight:500">'+esc(m.nombre)+'</td>'
+      +'<td><span class="tag '+esc(m.especie)+'">'+esc(m.especie)+'</span></td>'
+      +'<td style="font-family:var(--mono);font-size:12px">'+nac+'</td>'
+      +'<td>'+esc(m.dueno_nombre)+'</td>'
+      +'<td style="font-family:var(--mono);font-size:12px">'+esc(m.telefono||'-')+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+async function cargarVacunacion() {
+  setSpinner('vacunacion-spinner',true);
+  hideAlert('vacunacion-error');
+  document.getElementById('vacunacion-table-wrapper').style.display='none';
+  try {
+    const res = await fetch(API+'/vacunacion-pendiente',{headers:sessionHeaders()});
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    const dot = document.getElementById('cache-dot');
+    const st = document.getElementById('cache-status-text');
+    if (data.fromCache) {
+      dot.className='cache-dot hit';
+      st.textContent='CACHE HIT - datos desde Redis';
+      st.style.color='var(--green)';
+    } else {
+      dot.className='cache-dot miss';
+      st.textContent='CACHE MISS - consultado desde BD, guardado en Redis';
+      st.style.color='var(--amber)';
+    }
+    document.getElementById('cache-latency').textContent = data.latencyMs+'ms';
+    document.getElementById('stat-total').textContent = data.data.length;
+    document.getElementById('stat-mascotas').textContent = new Set(data.data.map(r=>r.mascota_id)).size;
+    document.getElementById('stat-hora').textContent = new Date().toLocaleTimeString('es-MX');
+    renderVacunacion(data.data);
+  } catch(err) {
+    showAlert('vacunacion-error',err.message);
+  } finally {
+    setSpinner('vacunacion-spinner',false);
+  }
+}
+
+async function invalidarCache() {
+  try {
+    await fetch(API+'/vacunas-aplicadas',{method:'POST',headers:sessionHeaders(),
+      body:JSON.stringify({mascota_id:1,vacuna_id:1,veterinario_id:1,costo_cobrado:350})});
+    showAlert('vacunacion-ok','Cache invalidado. Recarga para ver CACHE MISS.');
+    setTimeout(()=>hideAlert('vacunacion-ok'),3000);
+    document.getElementById('cache-dot').className='cache-dot idle';
+    const st = document.getElementById('cache-status-text');
+    st.textContent='Cache invalidado - proxima consulta sera MISS';
+    st.style.color='var(--text-muted)';
+  } catch(err) { showAlert('vacunacion-error',err.message); }
+}
+
+function renderVacunacion(rows) {
+  const tbody = document.getElementById('vacunacion-tbody');
+  tbody.innerHTML = '';
+  document.getElementById('vacunacion-table-wrapper').style.display='block';
+  if (!rows.length) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">Sin vacunaciones pendientes</td></tr>'; return; }
+  rows.forEach(r => {
+    const vence = r.fecha_vencimiento_estimada ? new Date(r.fecha_vencimiento_estimada).toLocaleDateString('es-MX') : '-';
+    const color = new Date(r.fecha_vencimiento_estimada) < new Date() ? 'var(--red)' : 'var(--amber)';
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td style="font-weight:500">'+esc(r.mascota_nombre)+'</td>'
+      +'<td><span class="tag '+esc(r.especie)+'">'+esc(r.especie)+'</span></td>'
+      +'<td>'+esc(r.dueno_nombre)+'</td>'
+      +'<td>'+esc(r.vacuna_nombre)+'</td>'
+      +'<td style="font-family:var(--mono);font-size:12px">'+esc(r.ultima_aplicacion_texto)+'</td>'
+      +'<td style="font-family:var(--mono);font-size:12px;color:'+color+'">'+esc(vence)+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function esc(s) { if(s===null||s===undefined)return'-'; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showAlert(id,msg){const el=document.getElementById(id);el.textContent=msg;el.classList.add('visible')}
+function hideAlert(id){document.getElementById(id).classList.remove('visible')}
+function setSpinner(id,v){document.getElementById(id).classList.toggle('visible',v)}
+</script>
+</body>
+</html>
