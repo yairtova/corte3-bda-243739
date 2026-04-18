@@ -1,0 +1,95 @@
+version: '3.9'
+
+services:
+
+  # ============================================================
+  # PostgreSQL 16 — base de datos principal
+  # ============================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: clinicavet_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       clinica_vet
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: postgres_root_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Scripts ejecutados en orden al crear la BD por primera vez:
+      - ./schema_corte3.sql:/docker-entrypoint-initdb.d/00_schema.sql
+      - ./backend/01_procedures.sql:/docker-entrypoint-initdb.d/01_procedures.sql
+      - ./backend/02_triggers.sql:/docker-entrypoint-initdb.d/02_triggers.sql
+      - ./backend/03_views.sql:/docker-entrypoint-initdb.d/03_views.sql
+      - ./backend/04_roles_y_permisos.sql:/docker-entrypoint-initdb.d/04_roles.sql
+      - ./backend/05_rls.sql:/docker-entrypoint-initdb.d/05_rls.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d clinica_vet"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ============================================================
+  # Redis 7 — caché de consultas
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: clinicavet_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --save "" --appendonly no  # Solo caché, sin persistencia
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ============================================================
+  # API Express — capa HTTP
+  # ============================================================
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: clinicavet_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_HOST:      postgres
+      DB_PORT:      5432
+      DB_NAME:      clinica_vet
+      DB_USER_VET1: vet_lopez
+      DB_PASS_VET1: vet_lopez_pass
+      DB_USER_VET2: vet_garcia
+      DB_PASS_VET2: vet_garcia_pass
+      DB_USER_VET3: vet_mendez
+      DB_PASS_VET3: vet_mendez_pass
+      DB_USER_REC:  usuario_recepcion
+      DB_PASS_REC:  recepcion_pass
+      DB_USER_ADM:  usuario_admin
+      DB_PASS_ADM:  admin_pass
+      REDIS_URL:    redis://redis:6379
+      PORT:         3001
+    ports:
+      - "3001:3001"
+
+  # ============================================================
+  # Frontend (Nginx sirviendo el HTML estático)
+  # ============================================================
+  frontend:
+    image: nginx:alpine
+    container_name: clinicavet_frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+
+volumes:
+  postgres_data:
