@@ -111,7 +111,9 @@ app.get('/api/mascotas', async (req, res) => {
 
         let result;
         if (nombre && nombre.trim() !== '') {
+            console.log(`[QUERY] Buscando nombre con parametro: ${JSON.stringify(nombre)}`);
             // *** LÍNEA QUE DEFIENDE CONTRA SQL INJECTION ***
+            // El $1 es un parámetro posicional — nunca se interpreta como SQL
             result = await client.query(
                 `SELECT m.id, m.nombre, m.especie, m.fecha_nacimiento,
                         d.nombre AS dueno_nombre, d.telefono
@@ -119,8 +121,9 @@ app.get('/api/mascotas', async (req, res) => {
                  JOIN duenos d ON d.id = m.dueno_id
                  WHERE m.nombre ILIKE $1
                  ORDER BY m.nombre`,
-                [`%${nombre}%`]
+                [`%${nombre}%`]   // <-- input del usuario va aquí, nunca en el string SQL
             );
+            console.log(`[QUERY] Rows devueltas: ${result.rowCount}`);
         } else {
             result = await client.query(
                 `SELECT m.id, m.nombre, m.especie, m.fecha_nacimiento,
