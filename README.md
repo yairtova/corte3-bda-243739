@@ -137,20 +137,24 @@ corte3-bda-{matricula}/
 git clone https://github.com/{usuario}/corte3-bda-{matricula}
 cd corte3-bda-{matricula}
 
-# 2. Levantar todos los servicios
+# 2. Configurar variables de entorno
+# Copia el archivo de ejemplo y ajusta las contraseñas si es necesario
+cp .env.example .env
+
+# 3. Levantar todos los servicios
 docker-compose up --build
 
-# 3. Acceder al sistema
-# Frontend: http://localhost:8080
+# 4. Acceder al sistema
+# Frontend: http://localhost:8081
 # API:      http://localhost:3001/api
 
 # Sin Docker (desarrollo local):
 cd api
-cp .env.example .env
-# Editar .env con tus credenciales locales
 npm install
 node index.js
 ```
+
+> **Nota de seguridad:** El archivo `.env` contiene credenciales sensibles y está excluido de Git por seguridad. Siempre usa `.env.example` como base para nuevas instalaciones.
 
 ## Credenciales de prueba
 

@@ -10,9 +10,9 @@ services:
     container_name: clinicavet_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB:       clinica_vet
-      POSTGRES_USER:     postgres
-      POSTGRES_PASSWORD: postgres_root_pass
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -63,21 +63,21 @@ services:
     environment:
       DB_HOST:      postgres
       DB_PORT:      5432
-      DB_NAME:      clinica_vet
-      DB_USER_VET1: vet_lopez
-      DB_PASS_VET1: vet_lopez_pass
-      DB_USER_VET2: vet_garcia
-      DB_PASS_VET2: vet_garcia_pass
-      DB_USER_VET3: vet_mendez
-      DB_PASS_VET3: vet_mendez_pass
-      DB_USER_REC:  usuario_recepcion
-      DB_PASS_REC:  recepcion_pass
-      DB_USER_ADM:  usuario_admin
-      DB_PASS_ADM:  admin_pass
-      REDIS_URL:    redis://redis:6379
-      PORT:         3001
+      DB_NAME:      ${POSTGRES_DB}
+      DB_USER_VET1: ${DB_USER_VET1}
+      DB_PASS_VET1: ${DB_PASS_VET1}
+      DB_USER_VET2: ${DB_USER_VET2}
+      DB_PASS_VET2: ${DB_PASS_VET2}
+      DB_USER_VET3: ${DB_USER_VET3}
+      DB_PASS_VET3: ${DB_PASS_VET3}
+      DB_USER_REC:  ${DB_USER_REC}
+      DB_PASS_REC:  ${DB_PASS_REC}
+      DB_USER_ADM:  ${DB_USER_ADM}
+      DB_PASS_ADM:  ${DB_PASS_ADM}
+      REDIS_URL:    ${REDIS_URL}
+      PORT:         ${API_PORT}
     ports:
-      - "3001:3001"
+      - "${API_PORT}:${API_PORT}"
 
   # ============================================================
   # Frontend (Nginx sirviendo el HTML estático)

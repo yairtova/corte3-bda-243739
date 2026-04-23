@@ -1,0 +1,16 @@
+# Dependencias
+node_modules/
+.npm
+npm-debug.log
+
+# Variables de entorno (¡MUY IMPORTANTE!)
+.env
+
+# Docker
+.docker
+*.log
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
