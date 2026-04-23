@@ -105,6 +105,9 @@ GRANT SELECT ON inventario_vacunas TO rol_veterinario;
 -- vet_atiende_mascota: SELECT para que RLS pueda consultarla
 GRANT SELECT ON vet_atiende_mascota TO rol_veterinario;
 
+-- Veterinarios: SELECT para que el sistema pueda mostrar nombres/datos básicos
+GRANT SELECT ON veterinarios TO rol_veterinario;
+
 -- Vista de pendientes: útil para el veterinario ver qué mascotas suyas necesitan vacuna
 GRANT SELECT ON v_mascotas_vacunacion_pendiente TO rol_veterinario;
 GRANT SELECT ON v_citas_detalle TO rol_veterinario;
